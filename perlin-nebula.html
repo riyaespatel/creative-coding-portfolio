@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perlin Noise Nebula - Creative Coding Portfolio</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Mono', monospace;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 255, 245, 0.3);
+            z-index: 100;
+            max-width: 300px;
+        }
+
+        .controls h3 {
+            color: #00fff5;
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 0.75rem;
+            color: #8892b8;
+            margin-bottom: 5px;
+        }
+
+        .control-group input[type="range"] {
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            outline: none;
+            background: rgba(0, 255, 245, 0.2);
+        }
+
+        .control-group input[type="range"]::-webkit-slider-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #00fff5;
+            cursor: pointer;
+        }
+
+        .control-group button {
+            width: 100%;
+            padding: 10px;
+            background: rgba(0, 255, 245, 0.1);
+            border: 1px solid #00fff5;
+            color: #00fff5;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+        }
+
+        .control-group button:hover {
+            background: #00fff5;
+            color: #000;
+        }
+
+        .info {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 190, 11, 0.3);
+            font-size: 0.75rem;
+            color: #8892b8;
+        }
+
+        .info strong {
+            color: #ffbe0b;
+        }
+
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 245, 0.3);
+            border-radius: 8px;
+            color: #00fff5;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+
+        .back-link:hover {
+            background: #00fff5;
+            color: #000;
+        }
+
+        main {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">← Back to Portfolio</a>
+
+    <div class="controls">
+        <h3>Nebula Controls</h3>
+        <div class="control-group">
+            <label>Flow Speed: <span id="speedValue">1.0</span></label>
+            <input type="range" id="flowSpeed" min="0.1" max="3" step="0.1" value="1">
+        </div>
+        <div class="control-group">
+            <label>Noise Scale: <span id="scaleValue">0.01</span></label>
+            <input type="range" id="noiseScale" min="0.001" max="0.03" step="0.001" value="0.01">
+        </div>
+        <div class="control-group">
+            <label>Particle Count: <span id="countValue">3000</span></label>
+            <input type="range" id="particleCount" min="500" max="6000" step="500" value="3000">
+        </div>
+        <div class="control-group">
+            <label>Color Palette</label>
+            <button id="colorToggle">Nebula Blue → Plasma</button>
+        </div>
+        <div class="control-group">
+            <button id="resetBtn">Reset Simulation</button>
+        </div>
+    </div>
+
+    <div class="info">
+        <strong>Technique:</strong> 2D Perlin noise flow field<br>
+        <strong>Interaction:</strong> Click + drag to disturb particles
+    </div>
+
+    <main>
+        <div id="canvas-container"></div>
+    </main>
+
+    <script>
+        // Global variables
+        let particles = [];
+        let flowField = [];
+        let cols, rows;
+        let scl = 20;
+        let zoff = 0;
+        
+        // Control parameters
+        let flowSpeed = 1.0;
+        let noiseScale = 0.01;
+        let particleCount = 3000;
+        let colorMode = 0; // 0 = nebula blue, 1 = plasma
+        
+        // Color palettes
+        const palettes = [
+            { // Nebula Blue
+                start: [0, 100, 200],
+                mid: [100, 50, 200],
+                end: [0, 255, 245]
+            },
+            { // Plasma
+                start: [255, 0, 110],
+                mid: [255, 150, 0],
+                end: [255, 255, 0]
+            }
+        ];
+
+        function setup() {
+            let canvas = createCanvas(windowWidth, windowHeight);
+            canvas.parent('canvas-container');
+            background(0);
+            
+            cols = floor(width / scl);
+            rows = floor(height / scl);
+            
+            flowField = new Array(cols * rows);
+            
+            // Initialize particles
+            initParticles();
+            
+            // Setup controls
+            setupControls();
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function draw() {
+            background(0, 5); // Fade trail effect
+            
+            // Update flow field
+            let yoff = 0;
+            for (let y = 0; y < rows; y++) {
+                let xoff = 0;
+                for (let x = 0; x < cols; x++) {
+                    let index = x + y * cols;
+                    let angle = noise(xoff, yoff, zoff) * TWO_PI * 4;
+                    let v = p5.Vector.fromAngle(angle);
+                    v.setMag(0.5);
+                    flowField[index] = v;
+                    xoff += noiseScale;
+                }
+                yoff += noiseScale;
+            }
+            zoff += 0.001 * flowSpeed;
+            
+            // Update and display particles
+            for (let particle of particles) {
+                particle.follow(flowField);
+                particle.update();
+                particle.edges();
+                particle.show();
+            }
+        }
+
+        class Particle {
+            constructor() {
+                this.pos = createVector(random(width), random(height));
+                this.vel = createVector(0, 0);
+                this.acc = createVector(0, 0);
+                this.maxSpeed = 2;
+                this.prevPos = this.pos.copy();
+                this.hue = random(100);
+            }
+
+            follow(vectors) {
+                let x = floor(this.pos.x / scl);
+                let y = floor(this.pos.y / scl);
+                let index = x + y * cols;
+                if (index >= 0 && index < vectors.length) {
+                    let force = vectors[index];
+                    this.applyForce(force);
+                }
+            }
+
+            applyForce(force) {
+                this.acc.add(force);
+            }
+
+            update() {
+                this.vel.add(this.acc);
+                this.vel.limit(this.maxSpeed);
+                this.pos.add(this.vel);
+                this.acc.mult(0);
+                
+                // Mouse interaction
+                if (mouseIsPressed) {
+                    let mouse = createVector(mouseX, mouseY);
+                    let d = p5.Vector.dist(this.pos, mouse);
+                    if (d < 100) {
+                        let force = p5.Vector.sub(this.pos, mouse);
+                        force.normalize();
+                        force.mult(0.5);
+                        this.applyForce(force);
+                    }
+                }
+            }
+
+            show() {
+                let palette = palettes[colorMode];
+                let speed = this.vel.mag();
+                
+                // Color based on speed
+                let col;
+                if (speed < 0.5) {
+                    col = palette.start;
+                } else if (speed < 1.5) {
+                    let amt = map(speed, 0.5, 1.5, 0, 1);
+                    col = [
+                        lerp(palette.start[0], palette.mid[0], amt),
+                        lerp(palette.start[1], palette.mid[1], amt),
+                        lerp(palette.start[2], palette.mid[2], amt)
+                    ];
+                } else {
+                    let amt = map(speed, 1.5, 2, 0, 1);
+                    col = [
+                        lerp(palette.mid[0], palette.end[0], amt),
+                        lerp(palette.mid[1], palette.end[1], amt),
+                        lerp(palette.mid[2], palette.end[2], amt)
+                    ];
+                }
+                
+                stroke(col[0], col[1], col[2], 100);
+                strokeWeight(1);
+                line(this.pos.x, this.pos.y, this.prevPos.x, this.prevPos.y);
+                
+                this.updatePrev();
+            }
+
+            updatePrev() {
+                this.prevPos.x = this.pos.x;
+                this.prevPos.y = this.pos.y;
+            }
+
+            edges() {
+                if (this.pos.x > width) {
+                    this.pos.x = 0;
+                    this.updatePrev();
+                }
+                if (this.pos.x < 0) {
+                    this.pos.x = width;
+                    this.updatePrev();
+                }
+                if (this.pos.y > height) {
+                    this.pos.y = 0;
+                    this.updatePrev();
+                }
+                if (this.pos.y < 0) {
+                    this.pos.y = height;
+                    this.updatePrev();
+                }
+            }
+        }
+
+        function setupControls() {
+            // Flow speed
+            document.getElementById('flowSpeed').addEventListener('input', (e) => {
+                flowSpeed = parseFloat(e.target.value);
+                document.getElementById('speedValue').textContent = flowSpeed.toFixed(1);
+            });
+
+            // Noise scale
+            document.getElementById('noiseScale').addEventListener('input', (e) => {
+                noiseScale = parseFloat(e.target.value);
+                document.getElementById('scaleValue').textContent = noiseScale.toFixed(3);
+            });
+
+            // Particle count
+            document.getElementById('particleCount').addEventListener('input', (e) => {
+                particleCount = parseInt(e.target.value);
+                document.getElementById('countValue').textContent = particleCount;
+                initParticles();
+            });
+
+            // Color toggle
+            document.getElementById('colorToggle').addEventListener('click', () => {
+                colorMode = (colorMode + 1) % 2;
+                const btn = document.getElementById('colorToggle');
+                btn.textContent = colorMode === 0 ? 'Nebula Blue → Plasma' : 'Plasma → Nebula Blue';
+                background(0);
+            });
+
+            // Reset
+            document.getElementById('resetBtn').addEventListener('click', () => {
+                background(0);
+                initParticles();
+            });
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+            cols = floor(width / scl);
+            rows = floor(height / scl);
+            flowField = new Array(cols * rows);
+            background(0);
+        }
+    </script>
+</body>
+</html>

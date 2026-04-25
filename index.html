@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creative Coding Portfolio - Ohlone College 2022-2024</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Crimson+Pro:wght@300;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0e27;
+            --bg-mid: #1a1f3a;
+            --accent-cyan: #00fff5;
+            --accent-magenta: #ff006e;
+            --accent-yellow: #ffbe0b;
+            --text-light: #e0e6ff;
+            --text-dim: #8892b8;
+        }
+
+        body {
+            font-family: 'Crimson Pro', serif;
+            background: var(--bg-dark);
+            color: var(--text-light);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .grain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 1000;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='3.5' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        header {
+            padding: 4rem 2rem 2rem;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        h1 {
+            font-family: 'Space Mono', monospace;
+            font-size: clamp(2rem, 6vw, 4.5rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-magenta), var(--accent-yellow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: hueShift 8s ease-in-out infinite;
+        }
+
+        @keyframes hueShift {
+            0%, 100% { filter: hue-rotate(0deg); }
+            50% { filter: hue-rotate(30deg); }
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            font-weight: 300;
+            margin-bottom: 0.5rem;
+        }
+
+        .meta {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--accent-cyan);
+            opacity: 0.7;
+        }
+
+        .intro {
+            max-width: 800px;
+            margin: 2rem auto 4rem;
+            padding: 0 2rem;
+            font-size: 1.1rem;
+            color: var(--text-dim);
+            line-height: 1.8;
+        }
+
+        .projects {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .project-card {
+            background: var(--bg-mid);
+            border: 1px solid rgba(0, 255, 245, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .project-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-magenta), var(--accent-yellow));
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .project-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(0, 255, 245, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 255, 245, 0.15);
+        }
+
+        .project-card:hover::before {
+            opacity: 1;
+        }
+
+        .project-preview {
+            width: 100%;
+            height: 250px;
+            background: linear-gradient(135deg, #1a1f3a, #0a0e27);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .project-preview canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .project-content {
+            padding: 2rem;
+        }
+
+        .project-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.5rem;
+            color: var(--accent-cyan);
+            margin-bottom: 0.5rem;
+        }
+
+        .project-concept {
+            color: var(--text-dim);
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .project-objective {
+            background: rgba(0, 255, 245, 0.05);
+            padding: 1rem;
+            border-left: 3px solid var(--accent-cyan);
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .project-objective strong {
+            color: var(--accent-yellow);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        .project-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 0.75rem 1.5rem;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            text-decoration: none;
+            text-align: center;
+            border-radius: 6px;
+            transition: all 0.3s;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .btn-primary {
+            background: var(--accent-cyan);
+            color: var(--bg-dark);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-yellow);
+            transform: scale(1.05);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--accent-cyan);
+            border: 2px solid var(--accent-cyan);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 255, 245, 0.1);
+            border-color: var(--accent-magenta);
+            color: var(--accent-magenta);
+        }
+
+        .skills {
+            max-width: 1000px;
+            margin: 4rem auto;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .skills h2 {
+            font-family: 'Space Mono', monospace;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            color: var(--accent-yellow);
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .skill-item {
+            background: var(--bg-mid);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 190, 11, 0.2);
+            transition: all 0.3s;
+        }
+
+        .skill-item:hover {
+            border-color: var(--accent-yellow);
+            transform: translateY(-4px);
+        }
+
+        .skill-item strong {
+            font-family: 'Space Mono', monospace;
+            color: var(--accent-yellow);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-dim);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            .projects {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="grain"></div>
+    
+    <header>
+        <h1>Creative Coding & Digital Art</h1>
+        <p class="subtitle">Curriculum & Examples from Ohlone College</p>
+        <p class="meta">Digital Literacy & Creative Coding Mentor | 2022-2024</p>
+    </header>
+
+    <div class="intro">
+        This repository contains a collection of interactive sketches and digital art used during my time as a 
+        <strong>Digital Literacy & Creative Coding Mentor</strong> at Ohlone College. My workshops focused on 
+        teaching students how to use <strong>p5.js</strong> to explore the intersection of mathematics, 
+        data science, and visual design.
+    </div>
+
+    <div class="projects">
+        <div class="project-card">
+            <div class="project-preview">
+                <div style="color: var(--accent-cyan); font-family: 'Space Mono', monospace; font-size: 0.9rem;">
+                    [Interactive Preview]
+                </div>
+            </div>
+            <div class="project-content">
+                <h3 class="project-title">01 / Perlin Noise Nebula</h3>
+                <p class="project-concept">
+                    <strong>Concept:</strong> Simulating fluid dynamics and stellar gas clouds using 2D Perlin noise 
+                    with interactive color mapping and particle flow systems.
+                </p>
+                <div class="project-objective">
+                    <strong>Learning Objective:</strong> Understanding non-linear randomness, vector fields, 
+                    and how natural phenomena can be represented through mathematical noise functions.
+                </div>
+                <div class="project-links">
+                    <a href="perlin-nebula.html" class="btn btn-primary">View Live Demo</a>
+                    <a href="https://github.com" class="btn btn-secondary">View Code</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="project-card">
+            <div class="project-preview">
+                <div style="color: var(--accent-magenta); font-family: 'Space Mono', monospace; font-size: 0.9rem;">
+                    [Interactive Preview]
+                </div>
+            </div>
+            <div class="project-content">
+                <h3 class="project-title">02 / Algorithmic Symmetry</h3>
+                <p class="project-concept">
+                    <strong>Concept:</strong> A generative art piece utilizing trigonometric identities to create 
+                    complex geometric forms through recursive pattern generation and harmonic oscillation.
+                </p>
+                <div class="project-objective">
+                    <strong>Learning Objective:</strong> Mapping mathematical functions to visual properties 
+                    (color, stroke, position) and understanding symmetry groups in computational design.
+                </div>
+                <div class="project-links">
+                    <a href="algorithmic-symmetry.html" class="btn btn-primary">View Live Demo</a>
+                    <a href="https://github.com" class="btn btn-secondary">View Code</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="project-card">
+            <div class="project-preview">
+                <div style="color: var(--accent-yellow); font-family: 'Space Mono', monospace; font-size: 0.9rem;">
+                    [Interactive Preview]
+                </div>
+            </div>
+            <div class="project-content">
+                <h3 class="project-title">03 / Data-Driven Particle Systems</h3>
+                <p class="project-concept">
+                    <strong>Concept:</strong> An interactive system where particle behavior is dictated by real-time 
+                    data inputs, demonstrating emergent complexity from simple rules.
+                </p>
+                <div class="project-objective">
+                    <strong>Learning Objective:</strong> Integrating Data Science principles with real-time rendering, 
+                    understanding object-oriented programming, and creating responsive visual systems.
+                </div>
+                <div class="project-links">
+                    <a href="data-particles.html" class="btn btn-primary">View Live Demo</a>
+                    <a href="https://github.com" class="btn btn-secondary">View Code</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="skills">
+        <h2>🛠️ Skills Demonstrated</h2>
+        <div class="skills-grid">
+            <div class="skill-item">
+                <strong>Languages</strong>
+                JavaScript (p5.js), HTML5 Canvas
+            </div>
+            <div class="skill-item">
+                <strong>Concepts</strong>
+                Trigonometry, Recursion, Vector Math
+            </div>
+            <div class="skill-item">
+                <strong>Version Control</strong>
+                Git, GitHub Pages
+            </div>
+            <div class="skill-item">
+                <strong>Teaching</strong>
+                Translating complex technical logic into accessible visual outcomes
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        © 2024 Digital Art Portfolio | Ohlone College Creative Coding Workshop Series
+    </footer>
+</body>
+</html>
