@@ -127,15 +127,9 @@ class Particle {
 - **Event-Driven Programming** - Mouse/keyboard interaction handling
 - **Real-time Systems** - 60fps animation loops, performance optimization
 
-### Version Control
-- **Git** - Branching, commits, merging
-- **GitHub** - Repository management, GitHub Pages deployment
-
 ### Teaching Philosophy
 - Breaking down complex algorithms into digestible visual components
 - Providing interactive controls for experimental learning
-- Emphasizing the connection between mathematics and art
-- Encouraging creative exploration through parameter manipulation
 
 ---
 
